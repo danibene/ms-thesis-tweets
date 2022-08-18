@@ -4,14 +4,22 @@ import numpy as np
 
 from json_tricks import load, dump
 
+def get_secrets(local_secrets_path=None):
+    if local_secrets_path is None:
+        local_secrets_path = os.path.join("local_secrets", "secrets.json")
+    if os.path.isfile(local_secrets_path):
+        with open(local_secrets_path, "r") as json_file:
+            secrets = load(json_file)
+    else:
+        secrets = os.environ
+    return secrets
 
-def twitter_authentication():
+def twitter_authentication(secrets):
     auth = tweepy.OAuthHandler(
-        os.environ["CONSUMER_KEY"], os.environ["CONSUMER_SECRET"]
+        secrets["CONSUMER_KEY"], secrets["CONSUMER_SECRET"]
     )
-    auth.set_access_token(os.environ["ACCESS_TOKEN"], os.environ["ACCESS_TOKEN_SECRET"])
+    auth.set_access_token(secrets["ACCESS_TOKEN"], secrets["ACCESS_TOKEN_SECRET"])
     return tweepy.API(auth)
-
 
 def tweet(api, status="Still not done"):
     api.update_status(status)
@@ -23,7 +31,6 @@ def get_new_hashtag(d):
         hashtag_index = np.random.randint(0, high=len(d["hashtags"]))
         hashtag = d["hashtags"][hashtag_index]
     return hashtag
-
 
 def update_hashtag(json_path):
     with open(json_path, "r") as json_file:
@@ -39,7 +46,10 @@ def update_hashtag(json_path):
 
 
 if __name__ == "__main__":
-    api = twitter_authentication()
+    
+    secrets = get_secrets() 
+    
+    api = twitter_authentication(secrets)
     json_path = "tweet_info.json"
     hashtag = update_hashtag(json_path)
     status = "Still not done #" + hashtag

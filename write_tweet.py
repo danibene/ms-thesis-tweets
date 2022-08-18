@@ -1,8 +1,13 @@
 import os
 import tweepy
+import datetime
 import numpy as np
+import pandas as pd
 
+from github import Github
+from zoneinfo import ZoneInfo
 from json_tricks import load, dump
+
 
 def get_secrets(local_secrets_path=None):
     if local_secrets_path is None:
@@ -14,12 +19,48 @@ def get_secrets(local_secrets_path=None):
         secrets = os.environ
     return secrets
 
-def twitter_authentication(secrets):
+
+def github_repo_authentication(secrets=None):
+    if secrets is None:
+        secrets = get_secrets()
+    access_token = secrets["ACCESS_TOKEN_GITHUB"]
+    repo_path = secrets["REPO_PATH_GITHUB"]
+    g = Github(access_token)
+    return g.get_repo(repo_path)
+
+
+def get_stats_yesterday(stats_df_path="stats.csv", secrets=None):
+    repo = github_repo_authentication(secrets)
+    contents = repo.get_contents("stats.csv")
+    download_url = contents._download_url.value
+    stats_df = pd.read_csv(download_url)
+    yesterday = get_datetime_yesterday()
+    can_format = "%Y-%m-%d"
+    yesterday_str = yesterday.strftime(can_format)
+    stats_df["date"] = [datetime.datetime.fromisoformat(dt).strftime(
+        can_format) for dt in stats_df["datetime"].values]
+    return stats_df[stats_df["date"] == yesterday_str]
+
+
+def get_datetime_yesterday(orig_tz_str="UTC", local_tz_str="America/Montreal", use_local_tz=True):
+    if use_local_tz:
+        tz = ZoneInfo(local_tz_str)
+    else:
+        tz = ZoneInfo(orig_tz_str)
+    now = datetime.datetime.now(tz=tz)
+    return now - datetime.timedelta(days=1)
+
+
+def twitter_authentication(secrets=None):
+    if secrets is None:
+        secrets = get_secrets()
     auth = tweepy.OAuthHandler(
         secrets["CONSUMER_KEY"], secrets["CONSUMER_SECRET"]
     )
-    auth.set_access_token(secrets["ACCESS_TOKEN"], secrets["ACCESS_TOKEN_SECRET"])
+    auth.set_access_token(secrets["ACCESS_TOKEN"],
+                          secrets["ACCESS_TOKEN_SECRET"])
     return tweepy.API(auth)
+
 
 def tweet(api, status="Still not done"):
     api.update_status(status)
@@ -31,6 +72,7 @@ def get_new_hashtag(d):
         hashtag_index = np.random.randint(0, high=len(d["hashtags"]))
         hashtag = d["hashtags"][hashtag_index]
     return hashtag
+
 
 def update_hashtag(json_path):
     with open(json_path, "r") as json_file:
@@ -46,11 +88,19 @@ def update_hashtag(json_path):
 
 
 if __name__ == "__main__":
-    
-    secrets = get_secrets() 
-    
-    api = twitter_authentication(secrets)
+
+    secrets = get_secrets()
+
+    sums_yesterday = get_stats_yesterday().sum()
+    stats_str = ("updates " + str(sums_yesterday["date"]) + ": " +
+                 str(sums_yesterday["changes"]) + " lines changed (" +
+                 str(sums_yesterday["additions"]) + " additions, " +
+                 str(sums_yesterday["deletions"]) + " deletions) ")
+
     json_path = "tweet_info.json"
     hashtag = update_hashtag(json_path)
-    status = "Still not done #" + hashtag
+    status = "Still not done..." + stats_str + "#" + hashtag
+
+    api = twitter_authentication(secrets)
+
     tweet(api, status=status)

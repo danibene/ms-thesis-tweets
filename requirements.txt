@@ -1,3 +1,5 @@
 tweepy
 numpy
+pandas
+PyGithub
 json-tricks

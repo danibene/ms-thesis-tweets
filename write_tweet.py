@@ -41,5 +41,5 @@ if __name__ == "__main__":
     api = twitter_authentication()
     json_path = "tweet_info.json"
     hashtag = update_hashtag(json_path)
-	status = "Still not done #" + hashtag
+    status = "Still not done #" + hashtag
     tweet(api, status=status)

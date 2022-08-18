@@ -20,17 +20,15 @@ def get_secrets(local_secrets_path=None):
     return secrets
 
 
-def github_repo_authentication(secrets=None):
-    if secrets is None:
-        secrets = get_secrets()
+def github_repo_authentication(secrets=os.environ):
     access_token = secrets["ACCESS_TOKEN_GITHUB"]
     repo_path = secrets["REPO_PATH_GITHUB"]
     g = Github(access_token)
     return g.get_repo(repo_path)
 
 
-def get_stats_yesterday(stats_df_path="stats.csv", secrets=None):
-    repo = github_repo_authentication(secrets)
+def get_stats_yesterday(stats_df_path="stats.csv", secrets=os.environ):
+    repo = github_repo_authentication(secrets=secrets)
     contents = repo.get_contents("stats.csv")
     download_url = contents._download_url.value
     stats_df = pd.read_csv(download_url)
@@ -51,9 +49,7 @@ def get_datetime_yesterday(orig_tz_str="UTC", local_tz_str="America/Montreal", u
     return now - datetime.timedelta(days=1)
 
 
-def twitter_authentication(secrets=None):
-    if secrets is None:
-        secrets = get_secrets()
+def twitter_authentication(secrets=os.environ):
     auth = tweepy.OAuthHandler(
         secrets["CONSUMER_KEY"], secrets["CONSUMER_SECRET"]
     )
@@ -91,7 +87,7 @@ if __name__ == "__main__":
 
     secrets = get_secrets()
 
-    sums_yesterday = get_stats_yesterday().sum()
+    sums_yesterday = get_stats_yesterday(secrets=secrets).sum()
     stats_str = ("updates " + str(sums_yesterday["date"]) + ": " +
                  str(sums_yesterday["changes"]) + " lines changed (" +
                  str(sums_yesterday["additions"]) + " additions, " +
@@ -101,6 +97,6 @@ if __name__ == "__main__":
     hashtag = update_hashtag(json_path)
     status = "Still not done..." + stats_str + "#" + hashtag
 
-    api = twitter_authentication(secrets)
+    api = twitter_authentication(secrets=secrets)
 
     tweet(api, status=status)

@@ -30,7 +30,7 @@ def update_hashtag(json_path):
         d = load(json_file)
 
     hashtag = get_new_hashtag(d)
-	d["last_hashtag_tweeted"] = hashtag
+    d["last_hashtag_tweeted"] = hashtag
 
     with open(json_path, "w") as json_file:
         dump(d, json_file)

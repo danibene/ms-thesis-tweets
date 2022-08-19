@@ -87,8 +87,9 @@ if __name__ == "__main__":
 
     secrets = get_secrets()
 
-    sums_yesterday = get_stats_yesterday(secrets=secrets).sum()
-    stats_str = ("updates " + str(sums_yesterday["date"]) + ": " +
+    stats_yesterday = get_stats_yesterday(secrets=secrets)
+    sums_yesterday = stats_yesterday.sum()
+    stats_str = ("updates " + str(stats_yesterday["date"].values[0]) + ": " +
                  str(sums_yesterday["changes"]) + " lines changed (" +
                  str(sums_yesterday["additions"]) + " additions, " +
                  str(sums_yesterday["deletions"]) + " deletions) ")

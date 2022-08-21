@@ -87,11 +87,15 @@ if __name__ == "__main__":
 
     secrets = get_secrets()
 
-    sums_yesterday = get_stats_yesterday(secrets=secrets).sum()
-    stats_str = ("updates " + str(sums_yesterday["date"]) + ": " +
-                 str(sums_yesterday["changes"]) + " lines changed (" +
-                 str(sums_yesterday["additions"]) + " additions, " +
-                 str(sums_yesterday["deletions"]) + " deletions) ")
+    stats_yesterday = get_stats_yesterday(secrets=secrets)
+    if len(stats_yesterday) > 0:
+        sums_yesterday = stats_yesterday.sum()
+        stats_str = ("updates " + str(stats_yesterday["date"].values[0]) + ": " +
+                     str(sums_yesterday["changes"]) + " lines changed (" +
+                     str(sums_yesterday["additions"]) + " additions, " +
+                     str(sums_yesterday["deletions"]) + " deletions) ")
+    else:
+        stats_str = "no new updates since the last time I checked"
 
     json_path = "tweet_info.json"
     hashtag = update_hashtag(json_path)

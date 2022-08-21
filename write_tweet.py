@@ -93,13 +93,13 @@ if __name__ == "__main__":
         stats_str = ("updates " + str(stats_yesterday["date"].values[0]) + ": " +
                      str(sums_yesterday["changes"]) + " lines changed (" +
                      str(sums_yesterday["additions"]) + " additions, " +
-                     str(sums_yesterday["deletions"]) + " deletions) ")
+                     str(sums_yesterday["deletions"]) + " deletions)")
     else:
         stats_str = "no new updates since the last time I checked"
 
     json_path = "tweet_info.json"
     hashtag = update_hashtag(json_path)
-    status = "Still not done..." + stats_str + "#" + hashtag
+    status = "Still not done..." + stats_str + " #" + hashtag
 
     api = twitter_authentication(secrets=secrets)
 
